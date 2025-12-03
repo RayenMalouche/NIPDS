@@ -1,0 +1,179 @@
+# config.yaml - NIDS System Configuration
+
+# Network Configuration
+network:
+  # Network interface to monitor (use 'ip addr' or 'ifconfig' to find yours)
+  interface: "Wi-Fi"  # Change to your interface: wlan0, enp0s3, etc.
+  promiscuous_mode: true
+  packet_buffer_size: 10000
+  capture_filter: ""  # BPF filter, e.g., "tcp port 80" (empty = capture all)
+
+# Detection Settings
+detection:
+  # ML model confidence threshold (0.0-1.0)
+  ml_threshold: 0.7
+
+  # Enable/disable detection methods
+  ml_based_enabled: true
+  rule_based_enabled: true
+  anomaly_detection_enabled: true
+
+  # Real-time analysis
+  real_time_analysis: true
+  batch_size: 100
+  analysis_window_seconds: 60
+
+# Rule-Based Detection Thresholds
+rules:
+  port_scan:
+    unique_ports_threshold: 20
+    time_window_seconds: 60
+
+  syn_flood:
+    syn_packets_threshold: 100
+    time_window_seconds: 10
+
+  icmp_flood:
+    icmp_packets_threshold: 50
+    time_window_seconds: 5
+
+  connection_rate:
+    max_connections_per_second: 100
+
+  suspicious_ports:
+    - 23    # Telnet
+    - 135   # RPC
+    - 139   # NetBIOS
+    - 445   # SMB
+    - 3389  # RDP
+    - 5900  # VNC
+
+# Alert Settings
+alerts:
+  severity_levels: ["Low", "Medium", "High", "Critical"]
+  retention_days: 30
+  max_alerts_in_memory: 1000
+
+  # Auto-block settings
+  auto_block_enabled: false
+  block_on_severity: ["Critical"]
+
+  # Notifications (optional)
+  email_notifications: false
+  email_recipients: []
+
+  telegram_notifications: false
+  telegram_bot_token: ""
+  telegram_chat_id: ""
+
+# Model Settings
+model:
+  # Path to trained model
+  model_path: "models/nids_model.pkl"
+
+  # Auto-retrain settings
+  auto_retrain: false
+  retrain_interval_hours: 24
+  retrain_min_samples: 10000
+
+  # Feature extraction
+  feature_window_size: 100
+  statistical_features: true
+
+# Performance Settings
+performance:
+  max_workers: 4
+  thread_pool_size: 8
+  queue_size: 5000
+
+  # Memory management
+  max_memory_mb: 2048
+  cleanup_interval_seconds: 300
+
+# Database Settings (if using MongoDB)
+database:
+  enabled: false
+  type: "mongodb"  # or "sqlite", "postgresql"
+
+  mongodb:
+    host: "localhost"
+    port: 27017
+    database: "nids_db"
+    username: ""
+    password: ""
+
+  sqlite:
+    path: "data/nids.db"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_to_file: true
+  log_directory: "logs"
+  max_log_size_mb: 100
+  backup_count: 5
+
+  # Log rotation
+  rotation: "daily"  # hourly, daily, weekly
+
+  # What to log
+  log_packets: false  # Warning: generates huge logs
+  log_alerts: true
+  log_statistics: true
+
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+
+  # CORS settings
+  cors_origins: ["*"]
+
+  # Rate limiting
+  rate_limit_enabled: false
+  requests_per_minute: 60
+
+  # Authentication (optional)
+  auth_enabled: false
+  api_key: ""
+
+# Monitoring & Metrics
+monitoring:
+  prometheus_enabled: true
+  prometheus_port: 8000
+
+  # Health check
+  health_check_interval: 30
+
+  # Metrics to collect
+  collect_metrics:
+    - "packet_count"
+    - "threat_count"
+    - "detection_rate"
+    - "false_positive_rate"
+    - "processing_time"
+    - "memory_usage"
+    - "cpu_usage"
+
+# Data Export
+export:
+  enabled: false
+  format: "csv"  # csv, json, parquet
+  export_directory: "exports"
+  export_interval_hours: 24
+
+  # What to export
+  export_alerts: true
+  export_statistics: true
+  export_packets: false
+
+# Development Settings
+development:
+  debug_mode: false
+  mock_data: false  # Generate fake data for testing
+  verbose_logging: false
+
+  # Testing
+  test_mode: false
+  test_data_path: "datasets/test_data.csv"

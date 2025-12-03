@@ -1,0 +1,190 @@
+# docker/docker-compose.yml - Complete NIDS+NIPS Stack
+
+version: '3.8'
+
+services:
+  # Main NIDS+NIPS API
+  nids-nips-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: nids-nips-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - CAPTURE_INTERFACE=eth0
+      - ENABLE_AUTO_BLOCKING=false
+      - MONGO_URL=mongodb://mongodb:27017/nids_db
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ../models:/app/models
+      - ../logs:/app/logs
+      - ../datasets:/app/datasets
+      - ../alerts:/app/alerts
+      - ../config/config.yaml:/app/config/config.yaml:ro
+      - ../config/.env:/app/.env:ro
+    networks:
+      - nids-network
+    depends_on:
+      - mongodb
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Packet Capture Service (requires host network for packet capture)
+  nids-capture:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.capture
+    container_name: nids-capture
+    network_mode: host
+    privileged: true
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    environment:
+      - CAPTURE_INTERFACE=eth0
+      - API_URL=http://localhost:8000
+    volumes:
+      - ../models:/app/models
+      - ../logs:/app/logs
+      - ../config/config.yaml:/app/config/config.yaml:ro
+    restart: unless-stopped
+
+  # MongoDB for Alert Storage
+  mongodb:
+    image: mongo:7.0
+    container_name: nids-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=nids_admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-change_me_in_production}
+      - MONGO_INITDB_DATABASE=nids_db
+    volumes:
+      - mongodb-data:/data/db
+      - ../config/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - nids-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for Caching
+  redis:
+    image: redis:7-alpine
+    container_name: nids-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me}
+    volumes:
+      - redis-data:/data
+    networks:
+      - nids-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Prometheus for Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nids-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+    volumes:
+      - ../config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - nids-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nids-grafana
+    ports:
+      - "3001:3000"  # Changed to 3001 to avoid conflict with React frontend
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin_change_me}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-clock-panel
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - nids-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend (optional - can also run with npm start)
+  nids-frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: nids-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://nids-nips-api:8000
+    depends_on:
+      - nids-nips-api
+    networks:
+      - nids-network
+    restart: unless-stopped
+
+# Persistent Volumes
+volumes:
+  mongodb-data:
+    driver: local
+    name: nids-mongodb-data
+  redis-data:
+    driver: local
+    name: nids-redis-data
+  prometheus-data:
+    driver: local
+    name: nids-prometheus-data
+  grafana-data:
+    driver: local
+    name: nids-grafana-data
+
+# Network Configuration
+networks:
+  nids-network:
+    driver: bridge
+    name: nids-network
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

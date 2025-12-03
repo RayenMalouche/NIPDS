@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+env/
+venv/
+.venv/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+
+# ML models & datasets
+models/
+datasets/
+*.pkl
+*.h5
+*.pth
+*.pt
+*.joblib
+*.onnx
+*.zip
+*.tar.gz
+
+# Logs & alerts
+logs/
+alerts/
+*.log
+*.alert
+
+# Grafana persistent data
+grafana/data/
+
+# Secrets & local config
+.env
+.env.example
+config.yaml.local
+*.key
+*.pem
+
+# Docker
+.docker/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# Scripts output
+*.log
+test-output/
+
+# Tests
+htmlcov/
+.coverage.*
+
+
+# Node.js / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+
+# Vite/React build cache
+frontend/.vite/

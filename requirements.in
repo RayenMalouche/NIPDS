@@ -1,0 +1,34 @@
+# requirements.in
+
+# Core Dependencies
+fastapi
+uvicorn[standard]
+pydantic
+
+# Packet Capture & Network
+scapy
+dpkt
+
+# Machine Learning
+scikit-learn
+numpy
+pandas
+
+# Database & Storage
+pymongo
+motor
+
+# Monitoring & Logging
+prometheus-client
+python-json-logger
+
+# Utilities
+python-dotenv
+pyyaml
+requests
+
+# Development
+pytest
+pytest-asyncio
+black
+flake8

@@ -1,0 +1,12 @@
+======================================================================
+NETWORK INTRUSION DETECTION SYSTEM - SECURITY REPORT
+======================================================================
+
+Generated: 2025-12-03 19:49:55
+
+SUMMARY STATISTICS
+----------------------------------------------------------------------
+Total Packets Analyzed:  23,404
+Threats Detected:        1,199
+Packets Blocked:         0
+Detection Rate:          5.12%

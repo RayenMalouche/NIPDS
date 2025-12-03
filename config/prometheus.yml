@@ -1,0 +1,31 @@
+# prometheus.yml - Prometheus Configuration
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'nids-monitor'
+
+scrape_configs:
+  - job_name: 'nids-api'
+    static_configs:
+      - targets: ['nids-api:8000']
+        labels:
+          service: 'api'
+    metrics_path: '/metrics'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files:
+  - 'alerts.yml'
