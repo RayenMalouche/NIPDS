@@ -163,8 +163,8 @@ nids-system/
 ### **1. Clone Repository**
 
 ```bash
-git clone <your-repo-url>
-cd nids-system
+git clone https://github.com/RayenMalouche/NIPDS.git
+cd NIPDS
 ```
 
 ### **2. Backend Setup**
@@ -576,8 +576,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 **Mohamed Rayen Malouche**
 - Email: rayen.malouche@gmail.com
-- LinkedIn: [Your LinkedIn]
-- GitHub: [@yourusername]
+- GitHub: @RayenMalouche
 
 ---
 
@@ -599,14 +598,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 - ✅ Documentation: Comprehensive
 - 🔄 Cloud Deployment: In progress
 - 🔄 Mobile App: Planned
-
----
-
-## 🔗 Related Projects
-
-- [Zeek Network Security Monitor](https://zeek.org/)
-- [Snort IDS/IPS](https://www.snort.org/)
-- [Suricata](https://suricata.io/)
 
 ---
 
