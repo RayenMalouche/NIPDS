@@ -2,16 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-asphalt font-sign text-paint antialiased;
+  }
+
+  ::selection {
+    @apply bg-amber text-asphalt;
+  }
+
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-amber;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+  /* Overhead-sign label: small caps on the gantry. */
+  .sign-label {
+    @apply font-sign text-[0.72rem] font-bold uppercase tracking-[0.16em] text-concrete;
+  }
+
+  /* A panel of road: tarmac with a painted edge line. */
+  .slab {
+    @apply border-l-4 border-paint/80 bg-tarmac;
+  }
+
+  /* The red-and-white boom of a lowered barrier. */
+  .boom {
+    background: repeating-linear-gradient(180deg, #e23b3b 0 10px, #ece8df 10px 20px);
+  }
+
+  /* Dashed lane marking. */
+  .lane-mark {
+    background: repeating-linear-gradient(90deg, rgba(236, 232, 223, 0.35) 0 22px, transparent 22px 40px);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-sign text-sm font-bold uppercase tracking-[0.12em] transition-colors disabled:cursor-not-allowed disabled:opacity-40;
+  }
+}
+
+/* Clear-lane vehicles: `left` is a percent of the road, unlike translateX. */
+@keyframes drive {
+  from {
+    left: -2rem;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
