@@ -1,46 +1,84 @@
-# Getting Started with Create React App
+# NIPDS — the checkpoint
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The frontend for the NIDS + NIPS engine (`src/main.py`). React 19 + TypeScript on
+Create React App, Tailwind v3 and framer-motion. It polls the engine every two
+seconds.
 
-## Available Scripts
+```bash
+npm install
+npm start          # http://localhost:3000 — expects the engine at http://localhost:8000
+npm run build      # production build → build/, served by nginx in the Dockerfile
+```
 
-In the project directory, you can run:
+Point it at another engine with `REACT_APP_API_URL=http://host:8000` at build time.
 
-### `npm start`
+## The design
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The page is **a border checkpoint on a road at night**. That's what an intrusion
+*prevention* system is: traffic arrives, most of it drives through, some gets
+inspected, and some is turned back at a barrier. Every device on the page comes
+from that crossing:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- **The lanes** (`components/checkpoint/gate-strip.tsx`) are the signature element.
+  Lane 0 carries clear traffic. Its surface shimmers, and its vehicles move
+  faster, with the live packet rate. Lanes 1–4 are the engine's four detection
+  rules (port scan, SYN flood, suspicious port, DDoS), each with its threshold on
+  the lane sign.
+  - Sources the barrier **turned back** queue in front of a red-and-white boom.
+    Those only **flagged or slowed** drive past it.
+  - A lane's boom stays down for a minute after its last block.
+- **Observe and Guard** replace the two separate dashboards the app used to switch
+  between. They show the same road; Observe (detection only) just has no barrier.
+- **The barrier control**: the auto-block switch, now read from `GET /nips/config`
+  on load instead of assuming "on".
+- **The holding bay**: every source the firewall is holding, as a passport with
+  what it did and when it will be released (from `/nips/status` → `temp_blocks`).
+  Hover a passport and its bytes show through.
+- **The pass office**: trust, ban or hold (one hour) a source by hand, with IPv4
+  validation. *Hold* uses `POST /nips/block`, which the old UI never exposed.
+- **The traffic counter**: packets per second at each poll. The old line chart
+  plotted cumulative totals, which only ever went up.
+- **The inspection log**: every recent detection, with the barrier's verdict
+  stamped on it: *turned back*, *already held*, *slowed*, *flagged* or *waved
+  through*, from the engine's `prevention_action`.
 
-### `npm test`
+**Palette**: defined once in `tailwind.config.js`. Each colour has one job:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Token | Hex | Role |
+| --- | --- | --- |
+| `asphalt` | `#1C1F23` | page ground, the road at night |
+| `tarmac` | `#262A30` | panels, lane signs |
+| `paint` | `#ECE8DF` | road markings and type |
+| `concrete` | `#8B9098` | secondary text, waved-through traffic |
+| `amber` | `#F2A900` | signage and caution: flagged, slowed, gate numbers |
+| `stop` | `#E23B3B` | the barrier: turned back, held, banned |
+| `pass` | `#3DAE6B` | clear traffic and trusted travellers |
 
-### `npm run build`
+**Type**: three roles. *Overpass* is based on the US highway sign alphabet, so
+it's the natural face for anything on a sign. *Overpass Mono* is for addresses
+and times. *Saira Stencil One* is for gate numbers and the name, stencilled like
+road paint. All are self-hosted through `@fontsource`.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**Motion**: newly turned-back sources drive into the queue, booms rise and fall,
+and the clear lane moves with the traffic. Under `prefers-reduced-motion` the
+vehicles and the shimmer stop, and everything else appears in place.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Reused from component-lab
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+| Component | Used for |
+| --- | --- |
+| `flickering-grid.tsx` | `ui/flickering-grid.tsx`: the clear lane's surface. Its flicker chance is fed the live packet rate, so the road shimmers with its traffic |
+| `evervault-card.tsx` | `ui/evervault-card.tsx`: the passports in the holding bay. The hover reveals hex bytes under a red mask; the card now takes children instead of a single centred string |
 
-### `npm run eject`
+Hand-built for this design instead: the lanes and barriers, gantry, traffic
+counter, holding bay, pass office and inspection log. Considered and rejected:
+`minimal` (the binary-matrix "ASCII art" is a looping video streamed from
+21st.dev's CDN, not a component, and it can't show real traffic) and the
+`stats-card` family (the lanes already carry the per-rule counts).
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Notes
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `recharts` is removed. Nothing uses it any more.
+- The two old dashboards (`NIDSDashboard.tsx`, `NIPSDashboard.tsx`) are replaced
+  by the single page with the Observe/Guard switch. The copy in
+  `fake data version (for UI testing)/` is left as it was.
