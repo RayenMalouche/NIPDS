@@ -46,7 +46,7 @@ function App() {
               </p>
             ) : (
               <p>
-                Observe mode shows detections only — no barrier. Every source a rule flags drives through in <span className="text-amber">amber</span>.
+                Observe mode shows detections only, no barrier. Every source a rule flags drives through in <span className="text-amber">amber</span>.
                 Switch to Guard to see what the firewall did about them.
               </p>
             )}

@@ -22,7 +22,7 @@ export function InspectionLog({ alerts, guarding }: { alerts: Alert[]; guarding:
         Inspection log · last {Math.min(15, alerts.length)}
       </h2>
       {alerts.length === 0 ? (
-        <p className="slab px-5 py-8 text-center text-concrete">Nothing to inspect — only clear traffic so far.</p>
+        <p className="slab px-5 py-8 text-center text-concrete">Nothing to inspect, only clear traffic so far.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] border-collapse text-sm">
